@@ -1,4 +1,4 @@
-# COMSC_Animal
+# COMSC Animal Expert System
 DVC COMSC200 Animal Expert System class/group project
 
 The aim of this project is to create a simple expert system, whose purpose is the identification of animals.  This system will provide 2 user personas, the expert user and the general user.  The system will enable a general user to react to system suggestions as to an animal's identification.  It will capture the general user's reaction and "learn" from these reactions in order to build a broader knowledge base for the identification of animals.  The expert user will be able to seed animal information and review/edit the information the system collects from general users.  Ultimately, the system should be able to guide a general user to the correct identity of a growing selection of animals, as vetted by the expert user.
