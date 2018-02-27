@@ -1,0 +1,244 @@
+// Lab 16, An Improved Artificial Intelligence Program
+// Programmer: Michaela Vuklisevicova 
+// Text Editor used: Notepad++ 
+// Compiler used: Visual Studio 2015
+
+#include <cstring>
+#include <fstream>
+#include <iostream>
+using namespace std;
+
+struct animal
+{
+  char text[100]; // a yes/no question OR an animal name, 99 characters with room for a null
+  animal *yes;  // pointer to next node if question is answered YES
+  animal *no;  // // pointer to next node if question is answered NO
+}; // if "yes" and "no" are 0, then "text" is an animal name
+
+// function prototype
+void deallocateTree(animal*);
+void saveTree(ofstream &, animal *);
+animal *loadTree(ifstream &);
+
+int main()
+{
+  // print name assignment's title
+  cout << endl;  
+  cout << "Lab 16, An Improved Artificial Intelligence Program" << endl; 
+  cout << "Programmer: Michaela Vuklisevicova" << endl; 
+  cout << "Text Editor used: Notepad++" << endl; 
+  cout << "Compiler used: Visual Studio 2015" << endl; 
+  cout << "File: " << __FILE__ << endl; 
+  cout << "Compiled: " << __DATE__ << " at " << __TIME__ << endl << endl;
+  
+  // open text file, and read from it
+  ifstream fin("animal.txt");
+  // first line of the text must be set to root
+  
+  animal *root = 0; // root pointer set to 0
+  
+  if(fin.good()) //if the file opened succesfully, load the tree
+  {
+	root = loadTree(fin); // use loadTree function to obtain all the info from the file and create the existing tree
+    fin.close(); // close the text file
+  } // if
+  // if the text file is empty, or does not exist, create the root node
+  // creating and initializing a root pointer which is going to point 
+  // to a newly created node which will store elephant in its text 
+  // member, and node pointers set to 0
+  else// if the file did not open succesfully, or does not have any data inside
+  {
+    root = new animal;
+    strcpy(root->text, "Elephant");
+    root->yes = 0;
+    root->no = 0;
+  }// if
+  
+  // beginning of the loop for each cycle of the game
+  while(true) // stops when user enters n or N for the question below (line 43)
+  {
+	char answer = 'n'; // loop variable for storing user's yes or no (y/Y or n/N) answers to questions
+	cout << "Do you want to play a game where you think of an animal, and I try to guess what it is?" << endl;
+	cout << "Enter Y for yes, and N for no." << endl;
+	cin >> answer;
+	cin.ignore(1000, 10);
+	if (answer == 'n' || answer == 'N') break; // if user answers no - he/she does not want to continue => breaks out of the loop, continues on line 123
+	
+	animal *p = root; // new pointer for tree traversal pointing to the same address as root pointer
+	while(p) // while p exists
+	{
+	  if (p->yes == 0) // if node pointer "yes" does not point to anything
+	  {
+		cout << "Is this correct?" << endl; // ask if computer's guess is correct
+		cout << p->text << endl;  // computer's best guess based on obtained information
+		cout << "Enter Y for yes, N for no." << endl;
+		cin >> answer;  // user's answer
+		cin.ignore(1000, 10);
+		
+		// if computer's guess was right, brag and break from the loop
+		if (answer == 'Y' || answer == 'y')
+		{
+		  cout << "I am so good at this game!" << endl;
+		  break; // breaks from the while(p) loop and starts new cycle of while(true) loop (skips lines 66-120)
+		} // if
+		
+		// if user wants to edit the name of the animal
+		else if(answer == 'E' || answer == 'e') // user can edit an animal name, when he/she answers E or e
+		{
+		  char editAnimal[100]; // buffer for animal editing
+		  cout << "What is the correct name of the animal?" << endl; // prompt for the user to enter new name for the edited animal
+		  cin.getline(editAnimal, sizeof(editAnimal)); // stores the whole line of text of user's input in char buffer "editAnimal"
+		  strcpy(p->text, editAnimal); // copies/replaces p-text member of the current node with the new animal name
+		  cout << "Edited animal name: " << p->text << endl; // prints out the new name of the animal
+		}
+		
+		// if answer was no, ask what the user was thinking of
+		char a[100]; // character buffer for the animal name which the user thinks of
+		cout << "Hm. What animal were you thinking of?" << endl;
+		cin.getline(a, sizeof(a)); // stores the whole line of text of user's answer in char buffer "a"
+		
+		char q[100]; // character buffer for the yes/no question which the user is going to create
+		cout << "Can you come up with yes/no question, which differentiates " << p->text << " from " << a << " ?" << endl; // prompt for the user to come up with a yes/no question which distinguishes computer's guess with user's animal
+		cin.getline(q, sizeof(q)); // stores the whole line of text of user's answer in char buffer "q"
+		
+		char yesNo = 'n'; // char variable for storing user's yes/no answer
+		cout << "As for " << a << ": " << q << endl;  // computer ask the yes/no question which the user has created about his/her animal
+		cout << "Enter Y for yes, N for no." << endl;
+		cin >> yesNo; // stores user's answer about his/her animal for his/her differentiating question
+		cin.ignore(1000, 10);
+		
+		animal *y = new animal; // new animal pointer y which points to new node (dynamically allocated)
+		animal *n = new animal; // new animal pointer n which points to new node (dynamically allocated)
+		
+		if(yesNo == 'y' || yesNo == 'Y') // if user's answer to his/her question about his/her animal was yes
+		{
+		  strcpy(y->text, a); // copy text from "a" (user's animal) to text member of the node where y points to
+		  strcpy(n->text, p->text); // copy computer's guess (text member of the node where p points to) into text member of the node where n points to
+		} // if yesNo is yes
+		else if(yesNo == 'N' || yesNo == 'n') // if user's answer to his/her question about his/her animal was no
+		{
+		  strcpy(n->text, a); // copy text from "a" (user's animal) to text member of the node where n points to
+		  strcpy(y->text, p->text); // // copy computer's guess (text member of the node where p points to) into text member of the node where y points to
+		}
+		
+		strcpy(p->text, q); // copy text from "q" (user created yes/no question) into text member of the node where p points to (this is going to be computer's first question in the next cycle of the game)
+		
+		// setting all node pointers of the newly created nodes where y and n pointers point to to 0
+		y->yes = 0;
+		n->yes = 0;
+		y->no = 0;
+		n->no = 0;
+		
+		// dereferences node pointers (of the node where p points to)
+		p->yes = y; // yes node pointer points to the same address as y pointer now
+		p->no = n;  // no node pointer points to the same address as n pointer now
+		
+		break; // breaks from the while(p) loop, and starts new cycle of the while(true) loop with dereferenced p pointer
+	  } // if (p->yes == 0);
+	  
+	  else if(p->yes != 0) // if node pointer "yes" contains an information (it exists)
+	  {
+		char yesNo = 'n'; // char variable for storing user's yes/no answer
+		cout << p->text << endl; // computer asks the question stored in text member of the node where p points to
+		cout << "Enter Y for yes, N for no." << endl;
+		cin >> yesNo; // stores user's answer in yesNo
+		cin.ignore(1000, 10);
+		
+		if(yesNo == 'y' || yesNo == 'Y') p = p->yes; // if user's answer to the question is yes, p dereferences (moves) to the value of its node pointer "yes"
+		else if(yesNo == 'n' || yesNo == 'N') p = p->no; // if user's answer to the question is no, p dereferences (moves) to the value of its node pointer "no"
+	    
+		// if user wants to edit the question
+		else if(yesNo == 'E' || yesNo == 'e') 
+		{
+		  char editQuestion[100]; // buffer for question editing
+		  cout << "Write the new question." << endl; // prompt for the user to enter new question instead of the current one
+		  cin.getline(editQuestion, sizeof(editQuestion)); // stores the whole line of text of user's input in char buffer "editQuestion"
+		  strcpy(p->text, editQuestion); // copies/replaces p-text member of the current node with the new question
+		  cout << "Edited question: " << p->text << endl; // prints out the new question
+		  
+		  cout << "Enter Y for yes, N for no." << endl;
+		  cin >> yesNo; // stores user's answer in yesNo
+		  cin.ignore(1000, 10);
+		  
+		  if(yesNo == 'y' || yesNo == 'Y') p = p->yes; // if user's answer to the question is yes, p dereferences (moves) to the value of its node pointer "yes"
+		  else if(yesNo == 'n' || yesNo == 'N') p = p->no; // if user's answer to the question is no, p dereferences (moves) to the value of its node pointer "no"
+		} // else if (editing)
+			
+		// if user wants to delete the question
+		else if(yesNo == 'D' || yesNo == 'd')
+		{
+		  cout << "Are you sure you want to delete this question?" << endl; // reassuring that the user wants to delete the question
+		  cin >> yesNo; // stores user's answer in yesNo
+		  cin.ignore(1000, 10);
+		  
+		  if(yesNo == 'y' || yesNo == 'Y') // if user really wants to delete the question
+		  {
+			deallocateTree(p->yes); // deallocate all the memory which is below this question in the binary tree on the yes side
+			deallocateTree(p->no); // deallocate all the memory which is below this question in the binary tree on the no side
+			
+			p->yes = 0; // yes node pointer set to null
+			p->no = 0; // no node pointer set to null
+			
+			// obtaining the new answer instead of the deleted question
+			char newAnswer[100]; // buffer for user's new answer
+			cout << "What answer is going to replace the deleted question?" << endl; // prompt for the user to enter the answer which is to replace the deleted question
+			cin.getline(newAnswer, sizeof(newAnswer)); // stores the whole line of user's input in newAnswer buffer
+			strcpy(p->text, newAnswer); // copies the line of text from buffer to the text member of the current node
+		  } // if (user really wants to delete the question)
+		} // else if (deleting)
+	  } // else if (p->yes != 0)
+	} // while(p)
+  } //while(true)
+  
+  // save tree by rewriting it into the animal.txt file
+  ofstream fout("animal.txt"); // open animal.txt file
+  saveTree(fout, root); // save the binary tree into the text file by using saveTree function
+  fout.close(); // close the text file
+  
+  //reclaim memory
+  deallocateTree(root); // uses function deallocateTree to free up the "free store" memory from all the nodes which were created, sends the root pointer to the function which stores the memory location of the first(root) node of the tree
+	
+  } // main()
+  
+  
+  // function definition
+  // recursive function deallocateTree
+  void deallocateTree(animal *p) // takes a memory location of animal node from the main
+  {
+	if (p == 0) return; // if the location does not have any content, function returns = exits
+	deallocateTree(p->yes); // visit yes side of the tree as long as it can
+	deallocateTree(p->no); // then visit no side of the tree as long as it can
+	delete p; // free-up the memory of the location where p points to
+  } // deallocateTree()
+  
+  
+void saveTree(ofstream &fout, animal *p)
+{
+  if(!p) fout << "EOF" << endl;
+  else 
+  {
+	fout << p->text << endl;
+	saveTree(fout, p->yes);
+	saveTree(fout, p->no);
+  } // else
+} // saveTree()
+
+
+animal *loadTree(ifstream &fin)
+{
+  char buf[100];
+  fin.getline(buf, sizeof(buf));
+  if(strcmp(buf, "EOF") == 0) return 0;
+  animal *p;
+  p = new animal;
+  strcpy(p->text, buf);
+  p->yes = loadTree(fin);
+  p->no = loadTree(fin);
+  return p;
+} // loadTree()
+  
+/* compile
+cd C:\Users\Cherry\Desktop\programming\Comsc165
+c++ -o Animal Animal.cpp
+Animal 
+*/

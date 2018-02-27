@@ -1,0 +1,734 @@
+// COMSC-165
+// 2017 Fall
+// Author: Micah Pearce
+// Lab LAB#16
+// Editor used: Notepad++
+// Compiler used: GCC for C++11
+
+
+
+#include <iostream>
+#include <fstream>
+#include <string>
+
+
+using std::cout;
+using std::cin;
+using std::endl;
+using std::ofstream;
+using std::ifstream;
+using std::string;
+
+
+struct animal
+{//Struct object with two animal object pointers, to create tree structure
+  //cstring to store either an animal name or a yes/no question
+  char text[100];
+  //Pointer to object if question is yes
+  animal* yes;
+  //pointer to object if question is no
+  animal* no;
+};
+
+//function prototypes
+int endLoop(char);
+int yesOrNo(char&);
+int isAVowel(char);
+int followPrompt(char&);
+string cString2string(char*);
+animal* loadTree(ifstream&);
+void thanks();
+void expertUser();
+void submenu(char&, animal*);
+void initCstring(char*);
+void coutString(char*);
+void myStrCpy(char*, const char*);
+void questionFormat(char*);
+void animalFormat(char*);
+void provideQuestion(animal*);
+void provideAnimal(animal*&);
+void saveTree(ofstream&, animal*);
+void deallocTree(animal*);
+void buildTree(animal*);
+void coutTree(animal*);
+void editMenu(animal*);
+void deleteMenu(animal*);
+
+
+int endLoop(char x)
+{//Accepts a char and returns 1 if the char is q or Q
+  char y = '\0';
+  (x == 'q' || x == 'Q') ? y = 1 : y = 0;
+  return y;
+}
+
+int yesOrNo(char &x)
+{//Accepts a char and returns 1 or 0
+  while(true)
+  {//Loop controlled by user input
+    if(x == 'y' || x == 'y')
+      return 1;//Returns 1 if y or Y
+    if(x == 'n' || x == 'N')
+      return 0;//Retruns 0 if n or N
+    //Prompts the user to correctly input choice
+    cout << "Please do your best to follow the prompts...\n"
+         << "Is the answer y/n?\n[y/n]> ";
+    cin  >> x;
+    cin.ignore(1000,10);
+  }
+}
+
+int isAVowel(char x)
+{//Accepts a char and returns  if the char is a common vowel
+  if(x == 'a' || x == 'A')
+    return 1;
+  if(x == 'e' || x == 'E')
+    return 1;
+  if(x == 'i' || x == 'I')
+    return 1;
+  if(x == 'o' || x == 'O')
+    return 1;
+  if(x == 'u' || x == 'U')
+    return 1;
+  return 0;
+}
+
+int followPrompt(char& x)
+{//Accepts a char array
+  //Prompts the user to follow directions
+  cout << "I am not very clever, which is why I need your help!\n"
+       << "Please follow the prompts...\n";
+  //Initialises the array to null
+  x == '\0';
+  //Returns the int 0
+  return 0;
+} 
+
+string cString2string(char* cStr)
+{//Accepts an array of char as a cString and returns a string
+ //Declares a string variable
+ string str = "";
+ for(int i = 0; cStr[i]; i++)
+  {//Loops through until a null char is found
+    str += cStr[i];//coppies the contents element by element
+  }
+  return str;
+}
+
+animal* loadTree(ifstream &fin)
+{//Accepts a file read object and returns a pointer to an animal object
+  //Declares an empty string
+  string str = "";
+  //Declares a string named eof and assigns it EOF
+  string eof = "EOF";
+  //Retrieves a line item from a text file and stores in str
+  getline(fin,str);
+  if(str == eof)
+    return 0;//Returns NULL of the file line is EOF
+  //Declares a pointer to an animal object and allocates memory from heap for it
+  animal* p = new animal;
+  //Copies the contents of str into the text field as a cString
+  myStrCpy(p->text,str.c_str());
+  //Recursively calls the function down first the yes then the no path
+  p->yes = loadTree(fin);
+  p->no = loadTree(fin);
+  //Returns the pointer p
+  return p;
+}
+
+void thanks()
+{//Prints the following to the console
+  cout << "Thank you for your assistance!\n";
+}
+
+void expertUser()
+{//Prints the following to the console
+  cout << " submenu reached.\n";
+}
+
+void submenu(char& x, animal* current)
+{//Accepts a reference to a char and a pointer to an animal object
+  if(x < 65 || x > 90)
+    x -= 32;//Converts lower case to upper
+  switch(x)
+  {//Executes one of the following cases depending on value of x
+    case 'Y': x = x;//x is x and breaks
+              break;
+    case 'N': x = '\0';//x is assigned NULL and breaks
+              break;
+    case 'E': editMenu(current);//Calls the editMenu function, then breaks
+              break;
+    case 'Q': x = x;
+    case 'D': deleteMenu(current);//Calls the deleteMenu function, then breaks
+              break;
+    default:  yesOrNo(x);//Ensures user input is valid
+              followPrompt(x);//Prompts the user to input valid function
+              break;
+  }
+}
+
+void initCstring(char* cString)
+{//Accepts an array or char
+  //Initialises the first 100 array elements to null
+  for(int i = 0; i < 100; i++)
+    cString[i] = '\0';
+}
+
+void coutString(char* cString)
+{//Accepts a char array and prints the contents to the console
+  int i = 0;
+  while(cString[i])
+  {
+    cout << cString[i];
+    i++;
+  }
+  cout << endl;//formatting
+}
+
+void myStrCpy(char* copy, const char* str)
+{//Accepts two char arrays and copies the contents of the str into the copy
+  int tracker = 0;
+  char term = '\0';
+  
+  while(true)
+  {//loops through the arrays until the null char is found in str
+    if(str[tracker] == term)
+    {//null terminates copy and ends the loop, when the null is found in str
+      copy[tracker] = term;
+      break;
+    }
+    else
+    {//copies the element in str to the corrosponding element in copy
+      copy[tracker] = str[tracker];
+      tracker++;
+    }
+  }
+}
+
+void questionFormat(char* cString)
+{//Accepts a char array and formats accordingly
+  //Declares an in and assigns it to 1
+  int i = 0;
+  while(true)
+  {//Loops through the array
+    if(cString[0] > 90 && cString[0] < 122)
+      cString[0] -= 32;//Capitalizes the first element of the array if it is undercase
+     if(cString[0] < 65 || cString[0] > 90)
+     {
+      if(cString[0] < 97 || cString[0] > 122)
+        {//Executes if the user input a non-alphabetic char
+          //Calls the function to print the string
+          coutString(cString);
+          //Reinitialises the string to null
+          initCstring(cString);
+          cout << "Unfortunately this does not qualify as a question.\n"
+               << "Please try again: ";
+          cin.getline(cString,100);
+        }
+     }
+    else
+      break;//ends the loop if the value is array is acceptable
+  }
+  while(cString[i])
+  {//Loops throug the array until a null char is found
+    if(cString[i] == '?' && cString[i+1] == '\0')
+      break;//Ends the loop if the last char is ? and the next is null
+    if(cString[i] == '?' && cString[i+1])
+    {//Executes if the user input a character after the ?
+      //Calls the function to print the string
+      coutString(cString);
+      //Reinitialises the string to null
+      initCstring(cString);
+      cout << "Unfortunately this does not qualify as a question.\n"
+           << "Please try again: ";
+      cin.getline(cString,100);
+      cin.ignore(1000,10);
+    }
+    i++;//iterates the tracker
+  }
+  if(cString[i-1] != '?')
+  {//Places a ? at the end of the artray if none is present
+    cString[i] = '?';
+  }
+}
+    
+void animalFormat(char* cString)
+{//Accepts a char array and formats accordingly
+  //Declares an int and assigns it to 0
+  int i = 0;
+  //Declares a char array
+  char temp[100];
+  initCstring(temp);
+  while(cString[i])
+  {//Loops throug the array until a null char is found
+    if(cString[i] < 65 || cString[i] > 90)
+    {
+      if(cString[i] < 97 || cString[i] > 122)
+      {
+        if(cString[i] != ' ')
+        {//Executes if the user input a non-alphabetic or space char
+          //Calls the function to print the string
+          coutString(cString);
+          //Reinitialises the string to null
+          initCstring(cString);
+          cout << "Unfortunately this does not qualify an animal.\n"
+               << "Please try again: ";
+          cin.getline(cString,100);
+          //Reassigns i to 0
+          i = 0;
+        }
+      }
+    }
+    i++;//iterates the tracker
+  }
+  if(isAVowel(cString[0]))
+  {//Executes if the first element of cString is a common vowel
+   //Reassigns i to 0
+    i = 0;
+    //Assigns "An " to the first three elements of temp
+    temp[0] = 'A';
+    temp[1] = 'n';
+    temp[2] = ' ';
+    while(cString[i])
+    {
+      temp[i+3] = cString[i];//Assigns the values in cString to temp after the above input
+      i++;
+    }
+  }
+  else
+  {
+    //Reassigns i to 0
+    i = 0;
+    temp[0] = 'A';
+    temp[1] = ' ';
+    while(cString[i])
+    {
+      temp[i+2] = cString[i];//Assigns the values in cString to temp after the above input
+      i++;
+    }
+  }
+  //Reassigns i  to 0
+  i = 0;
+  while(temp[i])
+  {
+    cString[i] = temp[i];//Assigns the values in temp to cString
+    i++;
+  }
+}  
+
+void provideQuestion(animal* p)
+{//Accepts a pointer to an animal object
+  //Declares a char variable and initialises it to null
+  char x = '\0';
+  //Declares a new animal object to hold the animal from p in
+  animal* a = new animal;
+  //Initialises the text memeber to null
+  initCstring(a->text);
+  //Copies the value of the text member a p to the text member at a
+  myStrCpy(a->text, p->text);
+  //Assigns the pointers in a to null
+  a->yes = 0;
+  a->no  = 0;
+  //Prompts the user to input a question
+  cout << "Please provide a yes/no question to help distinguish the animal\n"
+       << "you are thinking of from " << p->text << "\n> ";
+  //Reinitialises p->text
+  initCstring(p->text);
+  cin.getline(p->text,100);
+  //Formats the user input asa question
+  questionFormat(p->text);
+  //Prompts the user for additional input
+  cout << "Does a yes answer to this question lead to " << a->text
+       << "?\n[y/n]> ";
+  cin  >> x;
+  cin.ignore(1000,10);
+  while(true)
+  {
+    if(yesOrNo(x))
+    {//If the yes answer leads to the animal, assigns p->yes to a
+      p->yes = a;
+      //Calls function to assign p->no to a new animal
+      provideAnimal(p->no);
+      return;//ends the function call
+    }
+    else
+    {//If the no answer leads to the animal, assigns p->no to a
+      p->no = a;
+      //Calls the function to assign p->yes to a new animal
+      provideAnimal(p->yes);
+      return;//ends the function call
+    }
+  }
+}
+
+void provideAnimal(animal* &p)
+{//Accepts a pointer to an animal object to create a new animal node
+  //Declares a pointer to an animal object and allocates memory for a new object
+  animal* a = new animal;
+  //Initalises the text field to null
+  initCstring(a->text);
+  cout << "What is this animal called?\n> ";
+      cin.getline(a->text,100);
+      //Formats the animal as a statement
+      animalFormat(a->text);
+      //Assigns the yes and no pointers to null
+      a->yes = 0;
+      a->no = 0;
+      //assings p to a
+      p = a;
+}
+
+void saveTree(ofstream &fout, animal* p)
+{//Accepts a reference to a file output object and an animal object pointer 
+  if(p == 0)
+    fout << "EOF\n";//Writes EOF to the file if p is NULL
+  else
+  {//Writes the text at this 
+    fout << cString2string(p->text) << "\n";
+    saveTree(fout, p->yes);//Recursively calls the function down the yest path
+    saveTree(fout, p->no);//Recursively calls the function down the no path
+  }
+}
+
+void deallocTree(animal* p)
+{//Accepts a pointer to the root object of a data tree
+  if(!p)//Ends the function call if p is null
+    return;
+  //Recursively calls the function traversing each side of a binary key
+  deallocTree(p->yes);
+  deallocTree(p->no);
+  //Deletes the object that is pointed to by p
+  delete p;
+}  
+
+void buildTree(animal* p)
+{//Accepts a pointer to an animal object and calls the function below
+  provideQuestion(p);
+}
+
+void coutTree(animal* p)
+{//Accepts a pointer to a binary tree data structure
+  if(p == 0 && p == 0)
+    return;
+  coutString(p->text);
+  coutTree(p->yes);
+  coutTree(p->no); 
+}
+
+void editMenu(animal* current)
+{//Accepts a pointer to an animal object
+  //Declares a char x and assigns it NULL
+  char x = '\0';
+  //Prints the following to console
+  cout << "Edit";
+  expertUser();
+  while(true)
+  {//Loops until the condition is met
+    if(current->yes == 0 && current->no == 0)
+    {//Executes if the object pointed to is last node in branch
+      //Provides the current value in the text, field prompts for edit
+      cout << "The animal is currently " << current->text << ".\n"
+           << "Please enter the correction.\n> ";
+      initCstring(current->text);//initializes array
+      cin.getline(current->text,100);//Stores user input in text field
+      animalFormat(current->text);//Formats user input
+      while(true)
+      {//Loops until the user inputs a valid entry
+        //Provides the current value in the text field, prompts the user
+        cout << "The animal is now " << current->text << ".\n"
+             << "Is this correct?\n[y/n]> ";
+        cin  >> x;
+        cin.ignore(1000,10);
+        if(x < 65 || x > 90)
+          x -= 32;//Converts lower case to upper
+        if(x == 'D')//Invalid entry
+          followPrompt(x);
+        else if(x == 'E')//Invalid entry
+          followPrompt(x);
+        else if(x == 'Y')
+          break;//If the user selects Y breaks the loop
+      }
+      break;//Breaks out of the loop
+    }
+    else
+    {//Executes if the object pointed to is not last node in branch
+      //Provides the current value in the text, field prompts for edit
+      cout << "The question is currently: \""<< current->text
+           << "\"...\n" << "Please enter the correction.\n> ";
+      initCstring(current->text);//initializes array
+      cin.getline(current->text, 100);//Stores user input in text field
+      questionFormat(current->text);//Formats user input
+      while(true)
+      {//Loops until the user inputs a valid entry
+        //Provides the current value in the text field, prompts the user
+        cout << "The question is now: \"" << current->text << "\"\n"
+             << "Is this correct?\n[y/n]> ";
+        cin  >> x;
+        cin.ignore(1000,10);
+        if(x < 65 || x > 90)
+          x -= 32;//Converts lower case to upper
+        if(x == 'D')//Invalid entry
+          followPrompt(x);
+        else if(x == 'E')//Invalid entry
+          followPrompt(x);
+        else if(x == 'Y')
+          break;//If the user selects Y breaks the loop
+      }
+      break;//Breaks out of the loopuser selects y or Y breaks the loop
+    }
+  }
+}
+
+void deleteMenu(animal* current)
+{//Accepts a pointer to an animal object
+  //Declares a char and assigns it NULL
+  char x = '\0';
+  //Prints the following to the console
+  cout << "Delete";
+  expertUser();
+  while(true)
+  {//Loops until condition is met
+    if(current->yes == 0 && current->no == 0)
+    {//Executes if the object pointed to is last node in branch 
+      //Informs the user that this delete option is not valid, prompts user
+      cout << "Animals cannot be directly deleted, "
+           << "Would you like to edit the animal?\n[y/n]> ";
+      cin  >> x;
+      cin.ignore(1000,10);
+      if(x < 65 || x > 90)
+         x -= 32;//Converts lower case to upper
+      if(x == 'D')//Invalid entry
+        followPrompt(x);
+      else if(x == 'E')//Invalid entry
+        followPrompt(x);
+      else if(x == 'Y')
+      {//If the user selects to edit animal assigns x to e and calls submenu
+        x = 'e';
+        submenu(x,current);
+        break;//Breaks loop
+      }
+      else if(x == 'N')
+        break;//Breaks loop
+      else
+        followPrompt(x);//Prompts the user for valid input
+    }
+    else
+    {//Executes if the object pointed to is not last node in branch
+      //Prompts the user to be sure of choice
+      cout << "Are you sure you want to delete the question: \""
+           << current->text << "\", and all of it's answers?\n[y/n]> ";
+      cin  >> x;
+      cin.ignore(1000,10);
+      if(x < 65 || x > 90)
+         x -= 32;//Converts lower case to upper
+      if(x == 'D')//Invalid entry
+        followPrompt(x);
+      else if(x == 'E')//Invalid entry
+        followPrompt(x);
+      else if(x == 'Y')
+      {//Executes if the user chooses Y
+        //Deallocates the pointers associated with this object and after
+        deallocTree(current->yes);
+        deallocTree(current->no);
+        //Prompt user to input a new animal where the question was
+        cout << "Please enter an animal...\n> ";
+        initCstring(current->text);//initializes array
+        cin.getline(current->text, 100);//Stores user input in text field
+        questionFormat(current->text);//Formats user input
+        current->yes = 0;//Assigns the pointer member to NULL
+        current->no = 0;//Assigns the pointer member to NULL
+        break;//Ends loop
+      }
+      else if(x == 'N')
+        break;//Ends loop
+      else
+        followPrompt(x);//Prompts the user for valid input
+    }
+  }
+}
+
+int main()
+{
+  cout << "Lab 16: An Improved Artificial Intelligence Program [Animal.cpp, Animal.txt]\n"; 
+  cout << "Programmer: Micah Pearce \n"; 
+  cout << "Editor(s) used: Notepad++ \n"; 
+  cout << "Compiler(s) used: GCC \n"; 
+  cout << "File: " << __FILE__ << endl; 
+  cout << "Compiled: " << __DATE__ << " at " << __TIME__ << endl << endl;
+  //Declares an int to use as a process tracker
+  int tracker = 0;
+  //Declares an input file object called fin
+  ifstream fin;
+  //Declares a file output object called fout
+  ofstream fout;
+  //Declares a string variable
+  string textLine = "";
+  //Declares a pointer to an animal object and assigns it to NULL
+  animal* question = 0;
+  //Declares a char and assigns to NULL
+  char buff = '\0';
+  //Declares a cString and initalizes it to Elephant
+  char elephant[] = "Elephant";
+  //Declares a cString for storing a file name
+  char fileName[] = "Animal.txt";
+  //Opens a file with the name specified in fileName
+  fin.open(fileName);
+  if(getline(fin,textLine))
+  {//Executes if the file contains valid data
+    //Closes file
+    fin.close();
+    //Reopens the file at the begining
+    fin.open(fileName);
+    //Assings the pointer created in loadTree to question
+    question = loadTree(fin);
+    tracker++;//Iterates the tracker
+  }
+  else
+  {//Executes if the file is empty
+    //Allocates an animal object to question
+    question = new animal;
+    //Initalises thew text field to null
+    initCstring(question->text);
+    //Places the cstring Elephant in the text field of the animal object
+    myStrCpy(question->text,elephant);
+    //Formats the text field as a statement
+    animalFormat(question->text);
+    //Assigns both pointer to null
+    question->yes    = 0;
+    question->no     = 0;
+  }
+  //Closes the file
+  fin.close();
+  //Declares a pointer to the first declared animal object
+  animal* root = question;
+  //Introduces the user to the concept of the game
+  cout << "If you would like I will guess the animal you are thinking of.\n"
+       << "But I only know one animal at the moment, so please if I am wrong-\n"
+       << "teach me more animals so that we can keep playing!\n";    
+  while(true)
+  {//Controll loop
+    //Assigns the question pointer the memory address at root
+    question = root;
+    while(true)
+    {//Main body logic control loop
+      if(!tracker)
+      {//Executes if the tracker is 0
+        tracker++;//Iterates tracker
+        //Asks the user if the animal is the root node
+        cout << "Is the animal " << question->text << "?\n"
+             << "[y/n] or q to quit: ";
+        cin  >> buff;
+        cin.ignore(1000,10);
+        //Calls the submenu function
+        submenu(buff,question);
+        if(buff == 'Y')
+        {//Ends the loop if the program has identified the correct animal
+          cout << "Look at how clever I am!\n"
+               << "Guess I didn't really need your help...\n";
+          break;
+        }
+        else if(buff == 'N')
+        {//Executes if the animal does not match
+          cout << "I guess I will need to learn more..\n";
+          buildTree(question);
+          break;
+        }
+        else if(endLoop(buff))
+        {//Ends the loop if the user selects q or Q
+          cout << "Thank you for helping!\n";
+          break;
+        }
+        else
+        {//Executes if the user inputs an invalue char       
+          //Resets tracker to 0 by calling the function
+          tracker = followPrompt(buff);
+        }
+      }
+      else if(question->yes == 0 && question->no == 0)
+      {//Executes if the node is the end of a branch
+        tracker++;//Iterates tracker
+        cout << "Is the animal " << question->text << "?\n"
+             << "[y/n] or q to quit: ";
+        cin  >> buff;
+        cin.ignore(1000,10);
+        //Calls the submenu function
+        submenu(buff,question);
+        if(buff == 'Y')
+        {//Ends the loop if the program has identified the correct animal
+          cout << "Look at how clever I am now!\n";
+          thanks();
+          break;
+        }
+        else if(buff == 'N')
+        {
+          cout << "I guess I will need to learn more..\n";
+          buildTree(question);
+          break;
+        }
+        else if(endLoop(buff))
+        {//Ends the loop if the user selects q or Q
+          thanks();
+          break;
+        }
+        else
+        {//Executes if the user inputs an invalue char
+          followPrompt(buff);
+        } 
+      }
+      else
+      {
+        cout << question->text << "\n[y/n] or q to quit: ";
+        cin  >> buff;
+        cin.ignore(1000,10);
+        //Calls the submenu function
+        submenu(buff,question);
+        if(buff == 'Y')
+        {//Executes if the user inputs y or Y
+          //Assigns root the memory address at the yes pointer
+          question = question->yes;
+          //Reinitialises buff
+          buff = '\0';
+        }
+        else if(buff == 'N')
+        {//Executes if the user inputs n or N
+          //Assigns root the memory address at the no pointer
+          question = question->no;
+          buff = '\0';
+        }
+        else if(endLoop(buff))
+        {//Ends the loop if the user selects q or Q
+          thanks();
+          break;
+        }
+        else
+        {//Executes if the user inputs an invalue char
+          followPrompt(buff);
+        } 
+      }
+    }
+    //Prompts the user if they would like to continue
+    cout << "Would you like to continue?\n[y/n]> ";
+    cin  >> buff;
+    cin.ignore(1000,10);
+    if(!yesOrNo(buff))
+      break;//Breaks if the user chooses not to continue
+  }
+  //Opens the text file Animal.txt
+  fout.open(fileName);
+  //Calls the function to write the tree to the file
+  saveTree(fout, root);
+  fout.close();//Closes file
+  //Deallocates the memory at each node of the data structure
+  deallocTree(root);
+}//End of program
+  
+
+
+
+
+
+
+
+
+
+
